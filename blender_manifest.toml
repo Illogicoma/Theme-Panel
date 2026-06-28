@@ -1,0 +1,16 @@
+schema_version = "1.0.0"
+
+id = "theme_panel"
+version = "1.0.0"
+name = "Theme Panel"
+tagline = "Pin theme elements and quickly edit themes"
+maintainer = "Illogicoma"
+type = "add-on"
+
+tags = ["User Interface"]
+
+blender_version_min = "4.2.0"
+
+license = [
+  "SPDX:GPL-3.0-or-later",
+]
