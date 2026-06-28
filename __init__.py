@@ -684,20 +684,15 @@ class THEMEPANEL_PT_popover(Panel):
             col.prop(prefs, "global_shadetop", text="Shading Top")
             col.prop(prefs, "global_shadedown", text="Shading Down")
             
-            # Expose global fonts from view preferences with reset buttons
+            # Expose global font from view preferences with reset button
             col.separator()
-            col.label(text="Interface Fonts", icon='FONT_DATA')
             view_prefs = context.preferences.view
             
             row = col.row(align=True)
-            row.prop(view_prefs, "font_path_ui", text="UI")
-            op = row.operator("themepanel.reset_font", text="", icon='LOOP_BACK')
+            split = row.split(factor=0.88)
+            split.prop(view_prefs, "font_path_ui", text="Font", icon='FONT_DATA')
+            op = split.row().operator("themepanel.reset_font", text="", icon='LOOP_BACK')
             op.font_type = 'UI'
-            
-            row = col.row(align=True)
-            row.prop(view_prefs, "font_path_mono", text="Mono")
-            op = row.operator("themepanel.reset_font", text="", icon='LOOP_BACK')
-            op.font_type = 'MONO'
         
         # Theme Edit Section
         layout.separator()
