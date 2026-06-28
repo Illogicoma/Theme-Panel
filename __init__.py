@@ -25,23 +25,32 @@ class THEMEPANEL_PG_theme_group_item(PropertyGroup):
     """Stores a data path belonging to a theme group"""
     data_path: StringProperty(name="Data Path")
 
+def resolve_path(root, path):
+    """Resolves data paths containing indices like 'bone_color_sets[0].normal'"""
+    parts = path.split(".")
+    obj = root
+    for p in parts[:-1]:
+        if "[" in p and p.endswith("]"):
+            name, idx_str = p.split("[")
+            idx = int(idx_str[:-1])
+            obj = getattr(obj, name)[idx]
+        else:
+            obj = getattr(obj, p)
+    return obj, parts[-1]
+
 def update_group_color(self, context):
     """Callback when a theme group's color changes"""
     theme = context.preferences.themes[0]
     for item in self.items:
         try:
             # Resolve the path dynamically
-            # Example: "view_3d.space.gradients.high_gradient"
-            parts = item.data_path.split(".")
-            obj = theme
-            for part in parts[:-1]:
-                obj = getattr(obj, part)
+            obj, prop_name = resolve_path(theme, item.data_path)
             
             # The value could be a FloatVector (color)
-            val = getattr(obj, parts[-1])
+            val = getattr(obj, prop_name)
             # If length matches, copy
             if len(self.color) == len(val):
-                setattr(obj, parts[-1], self.color)
+                setattr(obj, prop_name, self.color)
             else:
                 # E.g., setting a 3-float color to a 4-float theme color
                 new_val = list(self.color)
@@ -49,7 +58,7 @@ def update_group_color(self, context):
                     new_val.append(val[3]) # Keep alpha
                 elif len(val) == 3 and len(new_val) == 4:
                     new_val = new_val[:3]
-                setattr(obj, parts[-1], new_val)
+                setattr(obj, prop_name, new_val)
         except Exception as e:
             print(f"ThemePanel: Failed to update {item.data_path}: {e}")
 
@@ -279,6 +288,17 @@ class THEMEPANEL_OT_pin_property(Operator):
                         res = find_property_path(child, target_ptr, prop_id, new_path)
                         if res is not None:
                             return res
+                elif p.type == 'COLLECTION':
+                    coll = getattr(current_obj, p.identifier)
+                    try:
+                        for idx, child in enumerate(coll):
+                            if child and hasattr(child, "as_pointer"):
+                                new_path = f"{current_path}.{p.identifier}[{idx}]" if current_path else f"{p.identifier}[{idx}]"
+                                res = find_property_path(child, target_ptr, prop_id, new_path)
+                                if res is not None:
+                                    return res
+                    except Exception as e:
+                        pass
             return None
             
         theme = context.preferences.themes[0]
@@ -529,13 +549,10 @@ class THEMEPANEL_OT_add_pin_from_clipboard(Operator):
             
         theme = context.preferences.themes[0]
         try:
-            parts = clipboard.split(".")
-            obj = theme
-            for p in parts[:-1]:
-                obj = getattr(obj, p)
+            obj, prop_name = resolve_path(theme, clipboard)
             
             # Check if property exists
-            if parts[-1] in obj.bl_rna.properties:
+            if prop_name in obj.bl_rna.properties:
                 prefs = context.preferences.addons[__name__].preferences
                 for p in prefs.pinned_items:
                     if p.data_path == clipboard:
@@ -583,12 +600,7 @@ class THEMEPANEL_PT_popover(Panel):
             else:
                 for item in prefs.pinned_items:
                     try:
-                        parts = item.data_path.split(".")
-                        obj = theme
-                        for p in parts[:-1]:
-                            obj = getattr(obj, p)
-                            
-                        prop_name = parts[-1]
+                        obj, prop_name = resolve_path(theme, item.data_path)
                         rna_prop = obj.bl_rna.properties.get(prop_name)
                         
                         if rna_prop is None:
