@@ -202,7 +202,7 @@ class THEMEPANEL_AddonPreferences(AddonPreferences):
     )
     
     show_pinned_section: bpy.props.BoolProperty(name="Pinned Elements", default=True)
-    show_global_section: bpy.props.BoolProperty(name="Global UI Shaping", default=True)
+    show_global_section: bpy.props.BoolProperty(name="Global Settings", default=True)
     show_theme_section: bpy.props.BoolProperty(name="Theme Edit", default=True)
     
     panel_location: bpy.props.EnumProperty(
@@ -536,6 +536,24 @@ class THEMEPANEL_OT_apply_theme(Operator):
         self.report({'WARNING'}, "Invalid theme selected.")
         return {'CANCELLED'}
 
+class THEMEPANEL_OT_reset_font(Operator):
+    """Reset the UI or Monospaced font path to default"""
+    bl_idname = "themepanel.reset_font"
+    bl_label = "Reset Font"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    font_type: StringProperty()
+    
+    def execute(self, context):
+        view_prefs = context.preferences.view
+        if self.font_type == 'UI':
+            view_prefs.font_path_ui = ""
+            self.report({'INFO'}, "Reset UI Font to default")
+        elif self.font_type == 'MONO':
+            view_prefs.font_path_mono = ""
+            self.report({'INFO'}, "Reset Mono Font to default")
+        return {'FINISHED'}
+
 class THEMEPANEL_OT_add_pin_from_clipboard(Operator):
     """Pin a property by reading its data path from the clipboard"""
     bl_idname = "themepanel.add_pin_from_clipboard"
@@ -651,13 +669,13 @@ class THEMEPANEL_PT_popover(Panel):
                         op = row.operator("themepanel.unpin", text="", icon='X')
                         op.data_path = item.data_path
                         
-        # Global UI Shaping Section
+        # Global Settings Section
         layout.separator()
         box = layout.box()
         row = box.row()
         icon = 'TRIA_DOWN' if prefs.show_global_section else 'TRIA_RIGHT'
         row.prop(prefs, "show_global_section", text="", icon=icon, emboss=False)
-        row.label(text="Global UI Shaping", icon='MODIFIER')
+        row.label(text="Global Settings", icon='MODIFIER')
         
         if prefs.show_global_section:
             col = box.column(align=True)
@@ -666,12 +684,20 @@ class THEMEPANEL_PT_popover(Panel):
             col.prop(prefs, "global_shadetop", text="Shading Top")
             col.prop(prefs, "global_shadedown", text="Shading Down")
             
-            # Expose global fonts from view preferences
+            # Expose global fonts from view preferences with reset buttons
             col.separator()
             col.label(text="Interface Fonts", icon='FONT_DATA')
             view_prefs = context.preferences.view
-            col.prop(view_prefs, "font_path_ui", text="UI")
-            col.prop(view_prefs, "font_path_mono", text="Mono")
+            
+            row = col.row(align=True)
+            row.prop(view_prefs, "font_path_ui", text="UI")
+            op = row.operator("themepanel.reset_font", text="", icon='LOOP_BACK')
+            op.font_type = 'UI'
+            
+            row = col.row(align=True)
+            row.prop(view_prefs, "font_path_mono", text="Mono")
+            op = row.operator("themepanel.reset_font", text="", icon='LOOP_BACK')
+            op.font_type = 'MONO'
         
         # Theme Edit Section
         layout.separator()
@@ -741,6 +767,7 @@ classes = (
     THEMEPANEL_OT_load_theme,
     THEMEPANEL_OT_save_theme,
     THEMEPANEL_OT_apply_theme,
+    THEMEPANEL_OT_reset_font,
     THEMEPANEL_PT_popover,
     THEMEPANEL_PT_sidebar,
 )
