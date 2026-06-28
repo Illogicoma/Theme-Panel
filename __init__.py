@@ -665,6 +665,13 @@ class THEMEPANEL_PT_popover(Panel):
             col.prop(prefs, "global_show_shaded", text="Show Shaded")
             col.prop(prefs, "global_shadetop", text="Shading Top")
             col.prop(prefs, "global_shadedown", text="Shading Down")
+            
+            # Expose global fonts from view preferences
+            col.separator()
+            col.label(text="Interface Fonts", icon='FONT_DATA')
+            view_prefs = context.preferences.view
+            col.prop(view_prefs, "font_path_ui", text="UI")
+            col.prop(view_prefs, "font_path_mono", text="Mono")
         
         # Theme Edit Section
         layout.separator()
