@@ -546,13 +546,23 @@ class THEMEPANEL_OT_reset_font(Operator):
     
     def execute(self, context):
         view_prefs = context.preferences.view
-        if self.font_type == 'UI':
-            view_prefs.font_path_ui = ""
-            self.report({'INFO'}, "Reset UI Font to default")
-        elif self.font_type == 'MONO':
-            view_prefs.font_path_mono = ""
-            self.report({'INFO'}, "Reset Mono Font to default")
-        return {'FINISHED'}
+        try:
+            if self.font_type == 'UI':
+                view_prefs.property_unset("font_path_ui")
+                self.report({'INFO'}, "Reset UI Font to default")
+            elif self.font_type == 'MONO':
+                view_prefs.property_unset("font_path_mono")
+                self.report({'INFO'}, "Reset Mono Font to default")
+            
+            # Force UI redraw to update font rendering immediately
+            for window in context.window_manager.windows:
+                for area in window.screen.areas:
+                    area.tag_redraw()
+                    
+            return {'FINISHED'}
+        except Exception as e:
+            self.report({'ERROR'}, f"Failed to reset font: {e}")
+            return {'CANCELLED'}
 
 class THEMEPANEL_OT_add_pin_from_clipboard(Operator):
     """Pin a property by reading its data path from the clipboard"""
