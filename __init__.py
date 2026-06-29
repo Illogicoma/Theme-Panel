@@ -782,11 +782,11 @@ def register():
         bpy.utils.register_class(cls)
         
     bpy.types.VIEW3D_HT_header.append(draw_header_button)
-    bpy.types.WM_MT_button_context.append(draw_context_menu)
+    bpy.types.UI_MT_button_context_menu.append(draw_context_menu)
 
 def unregister():
     bpy.types.VIEW3D_HT_header.remove(draw_header_button)
-    bpy.types.WM_MT_button_context.remove(draw_context_menu)
+    bpy.types.UI_MT_button_context_menu.remove(draw_context_menu)
     
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
