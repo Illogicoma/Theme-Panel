@@ -1,7 +1,7 @@
 schema_version = "1.0.0"
 
 id = "theme_panel"
-version = "1.0.0"
+version = "1.0.1"
 name = "Theme Panel"
 tagline = "Pin theme elements and quickly edit themes"
 maintainer = "Illogicoma"
